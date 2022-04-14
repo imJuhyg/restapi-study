@@ -1,18 +1,50 @@
 # REST API의 개념부터 실습까지
 
-### 목차
+## 목차
+[0. 개요](#개요)  
+[1. REST API란?](#1-rest-api란)  
+&nbsp; [1-1 REST API의 구성](#1-1-rest-api의-구성)  
+[2. REST API에 적용되어야 하는 조건](#2-rest-api에-적용되어야-하는-조건)  
+[3. REST API 설계 가이드](#3-rest-api-설계-가이드)  
+&nbsp;  [3-1 자원에 대한 행위 표현 - HTTP Method](#3-1-자원에-대한-행위-표현---http-method)  
+&nbsp;  [3-2 URI 명명 규칙](#3-2-uri-명명-규칙)   
+&nbsp;  [3-3 URI에서 리소스간의 관계를 표현하기](#3-3-uri에서-리소스간의-관계를-표현하기)  
+[4. HTTP 응답 코드](#4-http-응답-코드)  
+[5. Express와 MySQL로 REST API 테스트 서버 구축하기](#5-express와-mysql로-rest-api-테스트-서버-구축하기)  
+&nbsp;  [5-1 Node.js 설치 및 설치 확인](#5-1-nodejs-설치-및-설치-확인)  
+&nbsp;  [5-2 Express/MySQL 모듈 설치](#5-2-expressmysql-모듈-설치)  
+&nbsp;  [5-3 데이터베이스 설계](#5-3-데이터베이스-설계)  
+&nbsp;  [5-4 모듈 Import 및 Connection pool 설정](#5-4-모듈-import-및-connection-pool-설정)  
+&nbsp;  [5-5 저장된 User 정보 가져오기](#5-5-저장된-user-정보-가져오기)  
+[6. 클라이언트(안드로이드) 설정](#6-클라이언트안드로이드-설정)  
+&nbsp;  [6-1 Retrofit](#6-1-retrofit)  
+&nbsp;  [6-2 설계과정](#6-2-설계과정)  
+&nbsp;  [6-3 Retrofit Build](#6-3-retrofit-build)  
+&nbsp;  [6-4 데이터 클래스 작성](#6-4-데이터-클래스-작성)  
+&nbsp;  [6-5 인터페이스 작성](#6-5-인터페이스-작성)  
+&nbsp;&nbsp;    [6-5-1 Retrofit Annotation](#6-5-1-retrofit-annotation)  
+&nbsp;  [6-6 서버와 통신하기](#6-6-서버와-통신하기)  
+&nbsp;&nbsp;    [6-6-1 Call 객체 생성하기](#6-6-1-call-객체-생성하기)  
+&nbsp;&nbsp;    [6-6-2 enqueue()와 execute()](#6-6-2-enqueue와-execute)  
+&nbsp;&nbsp;    [6-6-3 RetrofitManager 생성](#6-6-3-retrofitmanager-생성)  
+&nbsp;&nbsp;    [6-6-4 테스트 API 서버에서 GET Method로 데이터 요청하기](#6-6-4-테스트-api-서버에서-get-method로-데이터-요청하기)  
+[7. Logging-Interceptor로 통신 과정 확인하기](#7-logging-interceptor로-통신-과정-확인하기)  
+&nbsp;  [7-1 build.gradle에 logging-interceptor 모듈 추가](#7-1-buildgradle에-logging-interceptor-모듈-추가)  
+&nbsp;  [7-2 OkHttpClient 인스턴스 생성](#7-2-okhttpclient-인스턴스-생성)  
+&nbsp;  [7-3 loggingInterceptor 생성](#7-3-logginginterceptor-생성)  
+&nbsp;  [7-4 loggingInterceptor 레벨 설정](#7-4-logginginterceptor-레벨-설정)  
+&nbsp;  [7-5 설정된 OkHttpClient를 Retrofit 빌더에 추가](#7-5-설정된-okhttpclient를-retrofit-빌더에-추가)
 
 ---
 
-### 개요
+## 개요
 이 문서는 [REST API 제대로 알고 사용하기](https://meetup.toast.com/posts/92), [위키백과](https://ko.wikipedia.org/wiki/REST)를 참조하여 만들었습니다. REST API의 개념과 Retrofit의 사용 방법을 전반적으로 알아보고 Node.js를 통해 GET 요청을 받을 수 있는 간단한 API 서버를 만들어 실습하는 과정을 담았습니다.
 
-#### 진행순서
+### 진행순서
 1. REST API의 기초와 설계 가이드
 2. Node.js, Express, MySQL로 REST API GET 테스트 서버 구축하기
 3. Retrofit 기초와 안드로이드에서 Retrofit으로 테스트 API 서버 호출해보기
 4. OkHttp의 Logging-Interceptor를 통해 통신 과정 중 일어나는 과정을 로그로 확인해보기
----
 
 ### 개발환경
 * Android, Node.js
@@ -20,8 +52,8 @@
 
 ---
 
-### 1. REST API란?
-REST(Representational State Transfer)는 분산 하이퍼미디어(WWW) 시스템을 위한 소프트웨어 아키텍처의 한 형식으로, 자원을 정의하고 자원에 대한 주소를 지정하는 방법에 대한 전반을 다룹니다. HTTP의 주요 저자 중 한 사람인 로이 필딩(Roy Fielding)이 처음 소개하였으며 HTTP*의 장점을 최대한 활용할 수 있는 아키텍쳐입니다.
+## 1. REST API란?
+REST(Representational State Transfer)는 분산 하이퍼미디어(WWW) 시스템을 위한 소프트웨어 아키텍처의 한 형식으로, 자원을 정의하고 자원에 대한 주소를 지정하는 방법을 다룹니다. HTTP의 주요 저자 중 한 사람인 로이 필딩(Roy Fielding)이 처음 소개하였으며 HTTP*의 장점을 최대한 활용할 수 있는 아키텍쳐입니다.
 
 <details>
 <summary>HTTP*</summary>
@@ -31,7 +63,7 @@ WWW상에서 텍스트 기반의 데이터를 주고 받을 수 있는 프로토
 </details>
  
 
-#### 1-1 REST API의 구성
+### 1-1 REST API의 구성
 * 자원(Resource)에 대한 표현(Representation)
 
   자원은 URI에 해당하며 자원을 표현하기 위한 이름이 정의되어야 합니다.
@@ -41,34 +73,25 @@ WWW상에서 텍스트 기반의 데이터를 주고 받을 수 있는 프로토
 &nbsp;
 * 행위
 
-  자원에 대한 표현을 정의했다면 자원에 대한 행위를 정해야 합니다. 행위는 Http Method(GET, POST, PUT, DELETE)로 표현합니다.
+  자원에 대한 표현을 정의했다면 자원에 대한 행위를 정해야 합니다. 행위는 Http Method(GET, POST, PUT, DELETE 등)로 표현합니다.
 
   예) GET /example.com/korea/busan – ‘busan’에 대한 자료를 가져오는 행위
 
 &nbsp;
 
 ---
-### 2. REST API에 적용되어야 하는 조건
+## 2. REST API에 적용되어야 하는 조건
 * <b>인터페이스 일관성</b>: 일관적인 인터페이스로 분리되어야 합니다. 이것은 URI에 지정한 자원에 대해 통일된 인터페이스를 제공해야 한다는 의미입니다.
 * <b>무상태(Stateless)</b>: 요청된 작업에 대한 상태정보를 서버에 저장하지 않습니다. 따라서 Rest API 서버는 단순히 들어오는 요청만을 처리하면 됩니다.
-* <b>캐시 처리 가능(Cacheable)</b>: HTTP에서 사용할 수 있는 캐싱*기능을 그대로 사용할 수 있으며 클라이언트는 서버의 응답을 캐싱할 수 있어야 합니다.
-
-<details>
-<summary>HTTP Caching*</summary>
-<div markdown="1">
-웹 사이트에서 이전에 사용되었던 리소스들을 캐시에 저장하였다가 재사용함으로써 웹 사이트의 반응성을 향상시킬 수 있는 기술입니다.
-</div>
-</details>
-
-&nbsp;
+* <b>캐시 처리 가능(Cacheable)</b>: HTTP에서 사용할 수 있는 캐싱기능을 그대로 사용할 수 있으며 클라이언트는 서버의 응답을 캐싱할 수 있어야 합니다.
 * <b>계층형 시스템(Layered System)</b>: Rest 서버에 로드 밸런싱이나 공유 캐시 기능을 지원하는 중간 서버를 두어 시스템의 확장성과 유연성을 향상시킬 수 있습니다.
 * <b>클라이언트/서버 구조</b>: 서버는 리소스를 요청할 수 있는 API를 제공하고 클라이언트는 사용자 인증, 컨텍스트(세션, 로그인 정보)등을 관리하는 역할로 분리하여 서로 간의 의존성을 줄이고 각 파트를 독립적으로 개선할 수 있어야 합니다.
 
 &nbsp;
 
 ---
-### 3. REST API 설계 가이드
-#### 3-1 자원에 대한 행위 표현 - HTTP Method
+## 3. REST API 설계 가이드
+### 3-1 자원에 대한 행위 표현 - HTTP Method
 |Method|설명|
 |---|---|
 |GET|서버로부터 리소스를 요청합니다.|
@@ -77,7 +100,7 @@ WWW상에서 텍스트 기반의 데이터를 주고 받을 수 있는 프로토
 |DELETE|해당 리소스를 삭제합니다.|
 
 &nbsp;
-#### 3-2 URI 명명 규칙
+### 3-2 URI 명명 규칙
 1. URI는 명사를 사용하여 정보의 자원을 표현해야 합니다.  
    잘못된 예) <b>GET /delete/korea/busan</b>  
    위의 예시는 ‘busan’자원을 삭제하라는 표현으로 볼 수 있습니다. 하지만 ‘delete’와 같은 행위가 URI에 포함되어서는 안됩니다.  
@@ -100,12 +123,12 @@ WWW상에서 텍스트 기반의 데이터를 주고 받을 수 있는 프로토
 4. 자원의 이름이 길 때, 가독성을 높이기 위해 하이픈(-)을 사용할 수 있습니다. 또한 밑줄(_)은 사용하지 않습니다. 이 또한 가독성을 위해 밑줄 대신 하이픈(-)을 사용합니다.  
    예) <b>http://example.com/korea/busan/haeundae-beach</b>
 
-5. URI는 대소문자를 구분하므로 자원에 대문자를 사용하는 것을 피해야합니다.
+5. URI는 스키마와 호스트를 제외하고는 대소문자를 구분합니다. 대소문자에 따라 서로 다른 리소스로 인식될 수 있습니다. 따라서 자원에 대문자를 사용하는 것을 피해야합니다.
 
 6. 파일 확장자를 URI에 포함시키지 않습니다. 파일 확장자를 표현해야 할 경우 응답으로 받고 싶은 타입을 명시할 수 있는 Accept header를 사용합니다.
 
 &nbsp;
-#### 3-3 URI에서 리소스간의 관계를 표현하기
+### 3-3 URI에서 리소스간의 관계를 표현하기
 소유(has)관계를 표현하고 싶은 경우는 아래의 예시처럼 사용할 수 있습니다.
 * /리소스명/{리소스ID}/리소스와 관계있는 다른 리소스명  
   예) <b>/users/1/devices</b> – ‘1번’ 유저가 가진 devices를 표현할 수 있습니다.
@@ -113,7 +136,7 @@ WWW상에서 텍스트 기반의 데이터를 주고 받을 수 있는 프로토
 &nbsp;
 
 ---
-### 4. HTTP 응답 코드
+## 4. HTTP 응답 코드
 클라이언트 요청에 따른 서버의 응답 코드입니다.
 |의미|응답 코드|설명|
 |---|---|---|
@@ -129,11 +152,11 @@ WWW상에서 텍스트 기반의 데이터를 주고 받을 수 있는 프로토
 &nbsp;
 
 ---
-### 5. Express와 MySQL로 REST API 테스트 서버 구축하기
+## 5. Express와 MySQL로 REST API 테스트 서버 구축하기
 간단하게 GET Method를 테스트해볼 수 있는 API 서버를 구축해보도록 하겠습니다.
 * 준비물: vscode, Node.js, Express, MySQL
 
-#### 5-1 Node.js 설치 및 설치 확인
+### 5-1 Node.js 설치 및 설치 확인
 vscode 터미널에 아래와 같이 입력하여 Node.js가 제대로 설치 되었는지 확인 할 수 있습니다.
 ```
 > node -v && npm -v
@@ -141,7 +164,7 @@ vscode 터미널에 아래와 같이 입력하여 Node.js가 제대로 설치 �
 
 &nbsp;
 
-#### 5-2 Express/MySQL 모듈 설치
+### 5-2 Express/MySQL 모듈 설치
 프로젝트 폴더를 생성하고 생성한 폴더로 이동하여 Express를 설치합니다.
 ```
 > npm init
@@ -169,7 +192,7 @@ Is this OK? (yes)
 
 &nbsp;
 
-#### 5-3 데이터베이스 설계
+### 5-3 데이터베이스 설계
 REST API 서버에서 사용할 데이터베이스를 아래와 같이 설계했습니다.  
 
 <b>Users</b>
@@ -182,7 +205,7 @@ REST API 서버에서 사용할 데이터베이스를 아래와 같이 설계했
 
 &nbsp;
 
-#### 5-4 모듈 Import 및 Connection pool 설정
+### 5-4 모듈 Import 및 Connection pool 설정
 ```javascript
 // Express
 const express = require('express')
@@ -207,7 +230,7 @@ const pool = mysql.createPool({
 
 &nbsp;
 
-#### 5-5 저장된 User 정보 가져오기
+### 5-5 저장된 User 정보 가져오기
 express의 get 메소드를 통해 자원을 설정하고 함수의 두번째 인자(res)로 쿼리문의 결과를 전송할 수 있습니다.
 ```javascript
 // 1. 데이터베이스에 저장된 모든 User 정보 가져오기
@@ -284,8 +307,8 @@ app.get('/users/:userid/name', (req, res, next) => {
 
 ---
 
-### 6. 클라이언트(안드로이드) 설정
-#### 6-1 Retrofit
+## 6. 클라이언트(안드로이드) 설정
+### 6-1 Retrofit
 [Retrofit 공식문서](https://square.github.io/retrofit/)  
 * REST API를 위한 HTTP 통신 라이브러리
 * 개발자가 네트워킹을 위해 스레드를 따로 만들 필요가 없으며 Callback을 통해 UI스레드를 업데이트 할 수 있습니다.
@@ -295,14 +318,14 @@ app.get('/users/:userid/name', (req, res, next) => {
 
 &nbsp;
 
-#### 6-2 설계과정
+### 6-2 설계과정
 1. Retrofit Build
-2. 데이터 클래스 작성(JSON Data -> Object/List)
+2. 데이터 클래스 작성(JSON Data <-> Object)
 3. HTTP Method를 사용할 인터페이스 작성(GET, POST, PUT, DELETE)
 
 &nbsp;
 
-#### 6-3 Retrofit Build
+### 6-3 Retrofit Build
 #### 1.build.gradle에 Retrofit 및 gson 모듈 추가
 ```Gradle
 // Retrofit
@@ -311,7 +334,7 @@ implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
 ```
 
 
-#### 2. Retrofit 객체를 여러 곳에서 사용할 수 있도록 싱글톤 클래스 'Retrofit Service'를 생성합니다.
+#### 2. Retrofit 객체를 여러 곳에서 사용할 수 있도록 싱글톤 클래스 'RetrofitService'를 생성합니다.
 
 * baseUrl: ex) http://www.example.com
 * addConverterFactory: 사용할 Converter를 입력합니다.(Gson, Moshi 등)
@@ -334,8 +357,8 @@ object RetrofitService {
 
 &nbsp;
 
-#### 6-4 데이터 클래스 작성
-HTTP통신의 응답 결과로 받은 JSON 데이터를 파싱된 결과값으로 저장할 데이터 클래스를 생성합니다. 이 예제에서는 <b>Users</b> 데이터를 받을 수 있도록 UserDTO 클래스를 작성했습니다.
+### 6-4 데이터 클래스 작성
+HTTP통신의 응답 결과를 Object 형태로 저장하려는 경우 데이터 클래스를 생성해야 합니다. 이 예제에서는 <b>Users</b> 데이터를 받을 수 있도록 UserDTO 클래스를 작성했습니다.
 
 ```kotlin
 data class UserDTO(
@@ -346,7 +369,7 @@ data class UserDTO(
 )
 ```
 
-<i><b>!</b> 데이터베이스 테이블의 필드명이 'id'인 경우 애플리케이션의 데이터 클래스 변수명도 동일하게 'id'로 설정해야합니다. 필드명이 'id'이고 이에 매칭되는 데이터 클래스의 변수명이 'userId'인 경우 응답결과로 'userid=null' 데이터가 반환되는 것을 확인했습니다. 이것은 Gson Converter가 JSON 데이터를 객체로 변환하는 과정에서 변수명이 매칭되지 않아 발생되는 문제점이라고 생각됩니다.</i>
+<b>!</b> 데이터베이스 테이블의 필드명이 'id'인 경우 애플리케이션의 데이터 클래스 변수명도 동일하게 'id'로 설정해야합니다. 필드명이 'id'이고 이에 매칭되는 데이터 클래스의 변수명이 'userId'인 경우 응답결과로 'userid=null' 데이터가 반환되는 것을 확인했습니다. 이것은 Gson Converter가 JSON 데이터를 객체로 변환하는 과정에서 변수명이 매칭되지 않아 발생되는 문제점이라고 생각됩니다.
 
 * 데이터 클래스가 잘못 설정된 경우 실행결과
   ```kotlin
@@ -384,10 +407,10 @@ data class UserDTO(
 
 &nbsp;
 
-#### 6-5 인터페이스 작성
+### 6-5 인터페이스 작성
 HTTP Method(GET, POST, PUT, DELETE)를 사용하여 서버에 요청할 API 인터페이스를 작성합니다.
 
-#### 6-5-1 Retrofit Annotation
+### 6-5-1 Retrofit Annotation
 * @GET: 지정된 경로에 있는 데이터를 요청합니다.  
   ```kotlin
   // http://xxx.xxx.xxx.xxx:3000/users
@@ -440,10 +463,13 @@ HTTP Method(GET, POST, PUT, DELETE)를 사용하여 서버에 요청할 API 인�
   fun insertUser(@Body user: User): Call<UserDTO>
   ```
 
-#### 6-6 서버와 통신하기
-#### 6-6-1 Call 객체 생성하기
-위에서 만든 API 인터페이스를 호출하여 Call 객체를 만들 수 있습니다. Call 객체는 이름 그대로 명시한 자원과 행위를 서버에 호출한다는 의미입니다. 따라서 호출에 대한 응답을 받기 위해 enqueue() 또는 excute()를 사용할 수 있습니다.
+### 6-6 서버와 통신하기
+### 6-6-1 Call 객체 생성하기
+위에서 만든 API 인터페이스를 호출하여 Call 객체를 만들 수 있습니다. Call 객체는 이름 그대로 '명시한 자원과 행위를 가지고 서버에 호출한다'는 의미입니다. 따라서 호출에 대한 응답을 받기 위해서는 enqueue() 또는 execute()를 사용해야 합니다.
 ```kotlin
+// Get UserAPI  
+private val userApi: UsersAPI? = RetrofitService.getRetrofit("http://xxx.xx.x.x:3000")?.create(UsersAPI::class.java)
+
 // 유저 데이터 요청(GET)
 fun searchAllUsers(result: (List<UserDTO>?) -> Unit) {
     // API 인터페이스를 통해 Call 객체 생성
@@ -457,7 +483,7 @@ fun searchAllUsers(result: (List<UserDTO>?) -> Unit) {
 
 &nbsp;
 
-#### 6-6-2 enqueue()와 execute()
+### 6-6-2 enqueue()와 execute()
 * Call.enqueue(): 호출과 응답까지에 대한 과정을 <b>비동기적</b>으로 처리하고 싶다면 enqueue() 메소드를 사용해야합니다. 결과는 Callback으로 받을 수 있으며 Callback 내부에는 호출에 성공하여 응답 받은 경우인 onResponse와 실패한 경우인 onFailure를 정의할 수 있습니다.  
   ```kotlin
   // Async
@@ -479,7 +505,7 @@ fun searchAllUsers(result: (List<UserDTO>?) -> Unit) {
   val response: Response<List<UserDTO>> = call.execute()
   ```
 
-#### 6-6-3 RetrofitManager 생성
+### 6-6-3 RetrofitManager 생성
 위의 코드를 종합하여 액티비티에서 간단하게 호출 메소드만 사용할 수 있도록 API 인터페이스의 생성과 요청을 담당하는 클래스를 생성했습니다.
 
 ```kotlin
@@ -532,7 +558,7 @@ class RetrofitManager {
 
 &nbsp;
 
-#### 6-6-4 테스트 API 서버에서 GET Method로 데이터 요청하기
+### 6-6-4 테스트 API 서버에서 GET Method로 데이터 요청하기
 메인 액티비티에서 GET 메소드를 호출하는 예시입니다.
 ```kotlin
 private val retrofitManager by lazy { RetrofitManager() }
@@ -593,23 +619,23 @@ D/response: name: kim
 
 ---
 
-### 7. Logging-Interceptor로 통신 과정 확인하기
+## 7. Logging-Interceptor로 통신 과정 확인하기
 OkHttp의 Logging-Interceptor를 사용함으로써 HTTP의 요청 <-> 응답 과정에서 일어나는 일을 로그로 확인할 수 있습니다.
 
-#### 7-1 build.gradle에 logging-interceptor 모듈 추가
+### 7-1 build.gradle에 logging-interceptor 모듈 추가
 ```Gradle
 // logging-interceptor
 implementation 'com.squareup.okhttp3:logging-interceptor:4.8.1'
 ```
 
-#### 7-2 OkHttpClient 인스턴스 생성
+### 7-2 OkHttpClient 인스턴스 생성
 OkHttpClient 인스턴스를 생성하고 logging-interceptor를 적용하는 과정입니다. 생성된 OkHttpClient 인스턴스는 Retrofit이 Build되는 과정에서 client() 메소드를 사용해 적용합니다.
 ```kotlin
 // 1. OkHttp 인스턴스 생성
 val client = OkHttpClient.Builder()
 ```
 
-#### 7-3 loggingInterceptor 생성
+### 7-3 loggingInterceptor 생성
 ```kotlin
 // 2. logging-interceptor 생성
 val loggingInterceptor = HttpLoggingInterceptor(object: HttpLoggingInterceptor.Logger {
@@ -620,7 +646,7 @@ val loggingInterceptor = HttpLoggingInterceptor(object: HttpLoggingInterceptor.L
 ```
 HttpLoggingInterceptor 인터페이스를 통해 로그에 담긴 메시지를 확인할 수 있습니다.
 
-#### 7-4 loggingInterceptor 레벨 설정
+### 7-4 loggingInterceptor 레벨 설정
 생성된 loggingInterceptor에 레벨을 설정합니다. 레벨에 따라 출력되는 로그는 다음과 같습니다.
 |Level|설명|
 |---|---|
@@ -675,7 +701,7 @@ D/Logging-Interceptor: [{"name":"kim"}]
 D/Logging-Interceptor: <-- END HTTP (16-byte body)
 ```
 
-#### 7-5 설정된 OkHttpClient를 Retrofit 빌더에 추가
+### 7-5 설정된 OkHttpClient를 Retrofit 빌더에 추가
 ```kotlin
 if(retrofit == null) {
   retrofit = Retrofit.Builder()
@@ -685,4 +711,7 @@ if(retrofit == null) {
     .build()
 }
 ```
+
+이제 HttpLoggingInterceptor.Logger에 의해 로그를 콜백 받을 수 있습니다.
+
 ---
