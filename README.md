@@ -313,8 +313,8 @@ app.get('/users/:userid/name', (req, res, next) => {
 * REST API를 위한 HTTP 통신 라이브러리
 * 개발자가 네트워킹을 위해 스레드를 따로 만들 필요가 없으며 Callback을 통해 UI스레드를 업데이트 할 수 있습니다.
 * 네트워크로 받은 데이터를 객체로 변환하여 사용할 수 있습니다.(Gson Converter 사용)
-* OkHttp 라이브러리를 베이스로 만들어졌습니다.
-* Retrofit은 자체적인 비동기 처리로 AsyncTask를 사용하는 OkHttp보다 실행속도가 빠릅니다.
+* OkHttp 라이브러리를 베이스로 만들어졌습니다. 따라서 OkHttp의 Interceptor기능을 활용할 수 있습니다.
+* Retrofit은 자체적인 비동기 처리를 지원하기 때문에 AsyncTask를 사용하는 통신 방법보다 속도가 빠릅니다.
 
 &nbsp;
 
